@@ -11,6 +11,12 @@ int main()
     cin >> rows;
     while (cin.fail() || rows <= 0)
     {
+        // input ended (like ctrl+z), nothing left to read so just stop
+        if (cin.eof())
+        {
+            cout << "\nNo input given, exiting." << endl;
+            return 0;
+        }
         cin.clear();
         cin.ignore(1000, '\n');
         cout << "Invalid rows, enter a number more than 0: ";
@@ -21,6 +27,11 @@ int main()
     cin >> cols;
     while (cin.fail() || cols <= 0)
     {
+        if (cin.eof())
+        {
+            cout << "\nNo input given, exiting." << endl;
+            return 0;
+        }
         cin.clear();
         cin.ignore(1000, '\n');
         cout << "Invalid columns, enter a number more than 0: ";
