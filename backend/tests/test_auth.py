@@ -50,6 +50,7 @@ def test_session_tokens_are_tamper_proof():
 
 def test_api_requires_login(client):
     assert client.get("/api/health").status_code == 200
+    assert client.head("/api/health").status_code == 200
     assert client.get("/api/config").status_code == 401
     assert client.post("/api/command/arm").status_code == 401
     assert client.get("/docs").status_code == 401

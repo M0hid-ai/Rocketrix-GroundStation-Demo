@@ -87,7 +87,7 @@ def me(request: Request) -> dict[str, Any]:
     return {"user": request.state.user}
 
 
-@app.get("/api/health")
+@app.api_route("/api/health", methods=["GET", "HEAD"])  # HEAD for uptime monitors
 def health() -> dict[str, Any]:
     return {"ok": True}
 
