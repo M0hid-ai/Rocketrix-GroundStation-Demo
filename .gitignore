@@ -21,3 +21,6 @@ backend/data/
 # Login accounts (password hashes); see groundstation/auth.py
 backend/users.txt
 .env
+
+# Downloaded helper binaries (share.bat)
+.tools/

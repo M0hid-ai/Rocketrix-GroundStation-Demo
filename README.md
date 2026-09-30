@@ -43,7 +43,10 @@ The server log records who sent each command.
 
 ## Sharing it with testers
 
-**Quick, from your own PC** (it must stay on): run the ground station, then open a tunnel:
+**Quick, from your own PC** (it must stay on). On Windows, double-click `share.bat`. It starts
+the ground station if it isn't already running, downloads `cloudflared` into `.tools/` the first
+time, and prints a public `https://….trycloudflare.com` link. The link changes on every run, and
+closing the window stops sharing. By hand, on any OS:
 
 ```bash
 cloudflared tunnel --url http://localhost:8000   # free, random https://*.trycloudflare.com URL
