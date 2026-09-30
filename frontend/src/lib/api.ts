@@ -1,10 +1,14 @@
 import type { ConfigPayload, FlightDoc, FlightListItem } from "./types";
 
+/** Fired when the server says the session is missing or expired; App shows the login screen. */
+export const LOGGED_OUT = "gs:logged-out";
+
 async function req<T>(path: string, init?: RequestInit): Promise<T> {
   const res = await fetch(path, {
     ...init,
     headers: { "content-type": "application/json", ...(init?.headers ?? {}) },
   });
+  if (res.status === 401 && !path.startsWith("/api/auth/")) window.dispatchEvent(new Event(LOGGED_OUT));
   if (!res.ok) {
     let detail = res.statusText;
     try {
@@ -19,6 +23,10 @@ async function req<T>(path: string, init?: RequestInit): Promise<T> {
 }
 
 export const api = {
+  me: () => req<{ user: string }>("/api/auth/me"),
+  login: (username: string, password: string) =>
+    req<{ user: string }>("/api/auth/login", { method: "POST", body: JSON.stringify({ username, password }) }),
+  logout: () => req<{ ok: boolean }>("/api/auth/logout", { method: "POST" }),
   command: (action: string) => req<{ ok: boolean }>(`/api/command/${action}`, { method: "POST" }),
   patchConfig: (patch: object) =>
     req<ConfigPayload>("/api/config", { method: "PATCH", body: JSON.stringify(patch) }),

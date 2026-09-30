@@ -6,6 +6,7 @@
  * widgets re-render at most ~20 times a second, so a 100 Hz stream never floods React.
  */
 import { useSyncExternalStore } from "react";
+import { LOGGED_OUT } from "./api";
 import type {
   ConfigPayload,
   EventMsg,
@@ -108,14 +109,23 @@ class Store {
       this.touch();
       this.ping();
     };
-    ws.onclose = () => {
+    ws.onclose = (ev) => {
       if (this.ws !== ws) return;
       this.ws = null;
       this.connected = false;
       this.touch();
-      setTimeout(() => this.connect(), 1000);
+      if (ev.code === 4401) window.dispatchEvent(new Event(LOGGED_OUT)); // session gone: stop retrying
+      else setTimeout(() => this.connect(), 1000);
     };
     ws.onmessage = (ev) => this.handle(JSON.parse(ev.data));
+  }
+
+  disconnect() {
+    const ws = this.ws;
+    this.ws = null;
+    this.connected = false;
+    ws?.close();
+    this.touch();
   }
 
   private ping() {

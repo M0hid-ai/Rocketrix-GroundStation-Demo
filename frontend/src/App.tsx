@@ -1,10 +1,12 @@
 import { useEffect, useState } from "react";
 import FlightsView from "./components/FlightsView";
+import Login from "./components/Login";
 import LiveChart, { type SeriesDef } from "./components/LiveChart";
 import { Controls, CountdownOverlay, PhasePipeline } from "./components/MissionBar";
 import SettingsDrawer from "./components/SettingsDrawer";
 import { AttitudePanel, EventLog, GroundTrack, LinkPanel } from "./components/SidePanels";
 import Tiles, { Alerts } from "./components/Tiles";
+import { api, LOGGED_OUT } from "./lib/api";
 import { store, useStore } from "./lib/store";
 
 // canvas needs literal colours: validated categorical slots 1-3 + neutral grey for reference
@@ -120,6 +122,33 @@ function LiveView({ onSettings }: { onSettings: () => void }) {
 }
 
 export default function App() {
+  // undefined = still checking the session cookie, null = logged out
+  const [user, setUser] = useState<string | null | undefined>(undefined);
+
+  useEffect(() => {
+    api.me().then((r) => setUser(r.user), () => setUser(null));
+    const onLoggedOut = () => {
+      store.disconnect();
+      setUser(null);
+    };
+    window.addEventListener(LOGGED_OUT, onLoggedOut);
+    return () => window.removeEventListener(LOGGED_OUT, onLoggedOut);
+  }, []);
+
+  if (user === undefined) return null;
+  if (user === null) return <Login onLogin={setUser} />;
+  return (
+    <Dashboard
+      user={user}
+      onLogout={() => {
+        store.disconnect();
+        api.logout().finally(() => setUser(null));
+      }}
+    />
+  );
+}
+
+function Dashboard({ user, onLogout }: { user: string; onLogout: () => void }) {
   const [tab, setTab] = useState<"live" | "flights">("live");
   const [settings, setSettings] = useState(false);
   const [toast, setToast] = useState<{ id: string; apogee?: number } | null>(null);
@@ -154,6 +183,12 @@ export default function App() {
         </nav>
         <Connection />
         <MissionClock />
+        <div className="user-chip">
+          {user}
+          <button className="btn sm ghost" onClick={onLogout}>
+            Log out
+          </button>
+        </div>
       </header>
       <main className="page">
         {tab === "live" ? <LiveView onSettings={() => setSettings(true)} /> : <FlightsView focusId={focus} />}
