@@ -1,0 +1,5 @@
+fastapi>=0.110
+uvicorn[standard]>=0.29
+pydantic>=2.6
+# Optional: only needed when reading a real radio receiver over USB serial
+# pyserial>=3.5

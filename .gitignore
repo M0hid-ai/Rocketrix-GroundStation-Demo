@@ -1,3 +1,19 @@
-*.exe
-*.o
+# Python
+__pycache__/
+*.pyc
+.venv/
+venv/
+.pytest_cache/
+
+# Node
+node_modules/
+frontend/dist/
+
+# Flight recordings
+backend/data/
+
+# Editors / OS
 .vscode/
+.idea/
+.DS_Store
+*.tsbuildinfo
