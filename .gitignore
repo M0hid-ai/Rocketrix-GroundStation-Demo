@@ -17,3 +17,7 @@ backend/data/
 .idea/
 .DS_Store
 *.tsbuildinfo
+
+# Login accounts (password hashes); see groundstation/auth.py
+backend/users.txt
+.env
