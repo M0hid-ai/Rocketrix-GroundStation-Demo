@@ -251,7 +251,22 @@ button {
     grid-template-columns: 1fr;
   }
   .header {
-    grid-template-columns: 1fr auto;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px 14px;
+    padding: 10px 16px;
+  }
+  .clock {
+    margin-left: auto;
+  }
+  .clock-main {
+    font-size: 20px;
+  }
+  .brand-sub {
+    display: none;
+  }
+  .stage {
+    min-width: 54px;
   }
   .mission-bar {
     grid-template-columns: 1fr;
@@ -1024,4 +1039,10 @@ button {
     border-color: #ccc;
     break-inside: avoid;
   }
+}
+
+a.btn {
+  text-decoration: none;
+  color: var(--text);
+  display: inline-block;
 }
