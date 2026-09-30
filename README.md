@@ -17,9 +17,49 @@ run.bat           # Windows
 ./run.sh --dev    # hot-reload dev mode            ->  http://localhost:5173
 ```
 
-Open the dashboard, press **LAUNCH**, and watch the flight. When it lands, a report is saved
+Sign in (see [Accounts](#accounts)), press **LAUNCH**, and watch the flight. When it lands, a report is saved
 automatically under **Flight reports**. Other devices on the same network (phones, laptops) can
 open `http://<ground-station-ip>:8000` to watch live.
+
+## Accounts
+
+The API, the live WebSocket and the API docs all require a login. Accounts are stored as
+PBKDF2 password hashes, never in plain text, and never in git.
+
+```bash
+cd backend
+.venv/bin/python -m groundstation.auth alice >> users.txt       # Linux / macOS
+.venv\Scripts\python -m groundstation.auth alice >> users.txt   # Windows
+```
+
+Each line of `backend/users.txt` (git-ignored) is `username:hash`. On a hosted deployment put the
+same lines in the `GS_USERS` environment variable instead, separated by `;`. That variable
+takes precedence over the file. Remove a line to revoke that user's access, including sessions
+that are already signed in. Sessions last 7 days and are signed with `GS_SECRET`; if that isn't
+set, a random key is kept in the data directory.
+
+Everyone shares the same simulation, so any signed-in user can launch, abort or change settings.
+The server log records who sent each command.
+
+## Sharing it with testers
+
+**Quick, from your own PC** (it must stay on): run the ground station, then open a tunnel:
+
+```bash
+cloudflared tunnel --url http://localhost:8000   # free, random https://*.trycloudflare.com URL
+ngrok http 8000                                  # free account: fixed *.ngrok-free.app URL
+```
+
+**Always on: Railway.** The repo includes a `Dockerfile` and `railway.json`.
+
+1. railway.com → New Project → Deploy from GitHub repo → pick this repo. Every push to `main`
+   redeploys automatically.
+2. Service → Variables: add `GS_USERS` (the `users.txt` lines joined with `;`) and `GS_SECRET`
+   (any long random string).
+3. Service → Settings → Networking → Generate Domain. Pick the region closest to your testers.
+4. Optional: add a Volume mounted at `/data` so saved flight reports survive redeploys.
+
+Keep it to one replica, because the simulation lives in the server's memory.
 
 ## What the demo shows
 
@@ -101,8 +141,8 @@ cd backend && python3 -m venv .venv && .venv/bin/pip install -r requirements-dev
 cd ../frontend && npm install && npm run typecheck
 ```
 
-API: `GET /api/config`, `PATCH /api/config` (partial JSON, validated), `POST /api/command/{arm|disarm|launch|abort|reset}`,
-`GET /api/flights`, `GET /api/flights/{id}`, `GET /api/flights/{id}/csv`, WebSocket `/ws`. Interactive docs are at `/docs`.
+API (session cookie required): `POST /api/auth/login`, `POST /api/auth/logout`, `GET /api/auth/me`, `GET /api/config`, `PATCH /api/config` (partial JSON, validated), `POST /api/command/{arm|disarm|launch|abort|reset}`,
+`GET /api/flights`, `GET /api/flights/{id}`, `GET /api/flights/{id}/csv`, WebSocket `/ws`. Interactive docs are at `/docs` once signed in. `GET /api/health` is public.
 
 ## Moving to real hardware
 
