@@ -104,7 +104,7 @@ class LinkConfig(BaseModel):
     frequency_mhz: float = Field(433.0, ge=137, le=1020)
     tx_power_dbm: float = Field(17.0, ge=0, le=30)
     spreading_factor: int = Field(7, ge=6, le=12)
-    bandwidth_khz: float = Field(250.0, ge=7.8, le=500)
+    bandwidth_khz: float = Field(500.0, ge=7.8, le=500)
     coding_rate: int = Field(5, ge=5, le=8, description="4/x")
     enforce_airtime: bool = Field(True, description="Drop frames the radio has no time to send")
     packet_loss_pct: float = Field(2.0, ge=0, le=90)
