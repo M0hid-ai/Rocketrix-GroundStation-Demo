@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { api } from "../lib/api";
 import { store, useStore } from "../lib/store";
 import type { Phase } from "../lib/types";
@@ -52,11 +52,20 @@ export function PhasePipeline() {
 
 export function Controls({ onSettings }: { onSettings: () => void }) {
   const [error, setError] = useState<string | null>(null);
-  const { phase, countdown, scale } = useStore((s) => ({
+  const [confirmEnd, setConfirmEnd] = useState(false);
+  const { phase, countdown, scale, recording } = useStore((s) => ({
     phase: (s.status?.sim.phase ?? "IDLE") as Phase,
     countdown: s.status?.sim.countdown ?? null,
     scale: s.status?.sim.time_scale ?? 1,
+    recording: s.status?.sim.recording ?? false,
   }));
+
+  // Ending a flight can't be undone, so the first click only arms the button for a few seconds.
+  useEffect(() => {
+    if (!confirmEnd) return;
+    const t = setTimeout(() => setConfirmEnd(false), 4000);
+    return () => clearTimeout(t);
+  }, [confirmEnd]);
 
   const run = async (action: string) => {
     setError(null);
@@ -71,8 +80,22 @@ export function Controls({ onSettings }: { onSettings: () => void }) {
 
   const onPad = phase === "IDLE" || phase === "ARMED";
   const counting = countdown !== null;
+  const inFlight = !onPad && recording;
   return (
     <div className="controls">
+      {inFlight && (
+        <button
+          className={`btn danger ${confirmEnd ? "confirm" : ""}`}
+          onClick={() => {
+            if (!confirmEnd) return setConfirmEnd(true);
+            setConfirmEnd(false);
+            run("end");
+          }}
+          title="Stop the flight now and save a report from the data received so far"
+        >
+          {confirmEnd ? "CONFIRM END?" : "■ END FLIGHT"}
+        </button>
+      )}
       {phase === "IDLE" && (
         <button className="btn" onClick={() => run("arm")}>
           ARM
