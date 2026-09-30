@@ -20,6 +20,11 @@ if [ ! -d frontend/node_modules ]; then
   (cd frontend && npm install --no-audit --no-fund)
 fi
 
+if [ ! -f backend/users.txt ] && [ -z "${GS_USERS:-}" ]; then
+  echo "!!  No login accounts yet. Create one with:"
+  echo "    (cd backend && .venv/bin/python -m groundstation.auth <username> >> users.txt)"
+fi
+
 if [ "${1:-}" = "--dev" ]; then
   echo "==> Dev mode: backend :$PORT, dashboard http://localhost:5173"
   (cd backend && .venv/bin/uvicorn groundstation.main:app --host 0.0.0.0 --port "$PORT" --reload) &

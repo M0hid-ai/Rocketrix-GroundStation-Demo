@@ -12,6 +12,10 @@ if not exist frontend\node_modules (
 if not exist frontend\dist\index.html (
   pushd frontend & call npm run build & popd
 )
+if not exist backend\users.txt if "%GS_USERS%"=="" (
+  echo !!  No login accounts yet. Create one with:
+  echo     cd backend ^&^& .venv\Scripts\python -m groundstation.auth ^<username^> ^>^> users.txt
+)
 echo ==^> Ground station running at http://localhost:8000
 cd backend
 .venv\Scripts\uvicorn groundstation.main:app --host 0.0.0.0 --port 8000
