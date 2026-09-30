@@ -161,10 +161,13 @@ async def ws(socket: WebSocket) -> None:
     origin = socket.headers.get("origin")
     hosts = {socket.headers.get("host"), socket.headers.get("x-forwarded-host")}  # tunnels/proxies
     same_origin = origin is None or origin.split("://", 1)[-1] in hosts
-    if not same_origin or auth.verify(socket.cookies.get(COOKIE)) is None:
-        await socket.close(code=4401)
+    if not same_origin:
+        await socket.close()  # rejects the handshake (HTTP 403)
         return
     await socket.accept()
+    if auth.verify(socket.cookies.get(COOKIE)) is None:
+        await socket.close(code=4401)  # accepted first so the browser sees the code
+        return
     queue = station.subscribe()
     try:
         await socket.send_text(json.dumps({

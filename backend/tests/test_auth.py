@@ -68,9 +68,10 @@ def test_login_is_rate_limited(client):
 
 
 def test_websocket_requires_session_and_same_origin(client):
-    with pytest.raises(WebSocketDisconnect):
-        with client.websocket_connect("/ws"):
-            pass
+    with client.websocket_connect("/ws") as ws:
+        with pytest.raises(WebSocketDisconnect) as closed:
+            ws.receive_json()
+        assert closed.value.code == 4401  # the dashboard shows the login screen on this code
     login(client)
     with client.websocket_connect("/ws") as ws:
         assert ws.receive_json()["type"] == "hello"
