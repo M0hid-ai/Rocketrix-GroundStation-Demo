@@ -68,9 +68,14 @@ def summarise(rows: list[dict[str, Any]], link: dict[str, Any] | None = None,
     }
     if truth:
         out["truth"] = truth
-        if truth.get("apogee_m"):
+        if truth.get("apogee_m") and _reached_apogee(phases):
             out["apogee_error_m"] = round(out["apogee_m"] - truth["apogee_m"], 2)
     return out
+
+
+def _reached_apogee(phases: list[dict[str, Any]]) -> bool:
+    """A flight ended during boost/coast has no apogee yet, so there is nothing to compare."""
+    return any(p["state"] in ("DROGUE", "MAIN", "LANDED") for p in phases)
 
 
 def downsample(rows: list[dict[str, Any]], max_points: int = 2500) -> dict[str, list]:

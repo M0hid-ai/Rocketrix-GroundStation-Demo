@@ -102,7 +102,7 @@ class GroundStation:
                         "tp": tp, "ts": time.time() * 1000}, keep=True)
 
     # ------------------------------------------------------------------ commands
-    def command(self, action: str) -> dict[str, Any]:
+    def command(self, action: str, user: str | None = None) -> dict[str, Any]:
         phase = self.sim.truth.phase
         if action == "arm":
             if phase != IDLE:
@@ -128,6 +128,19 @@ class GroundStation:
                 return {"ok": False, "error": "no countdown to abort"}
             self.countdown_end = None
             self.event("Countdown ABORTED", "error")
+        elif action == "end":
+            # Stop the flight wherever it is, save what was received as the report, and go
+            # back to a fresh pad. The report says it was ended early and by whom.
+            if self.t_zero is None or not self.recorder.active:
+                return {"ok": False, "error": "no flight in progress"}
+            ended_in = self.ground_state
+            self.event(f"Flight ENDED by {user or 'operator'} in {ended_in}", "error")
+            doc = self._save_flight({"ended_early": True, "ended_in": ended_in, "ended_by": user})
+            self.new_session()
+            self.broadcast({"type": "reset"})
+            if doc:
+                self.event(f"Flight saved: apogee {doc['summary'].get('apogee_m')} m (ended early)",
+                           "success")
         elif action == "reset":
             if phase not in (IDLE, ARMED, LANDED):
                 return {"ok": False, "error": "rocket is in flight"}
@@ -255,17 +268,22 @@ class GroundStation:
 
     def _check_landing(self, now: float) -> None:
         if self.landed_at is not None and now - self.landed_at > 2.0 and self.recorder.active:
-            ev = self.sim.events
-            truth = {"apogee_m": _r(ev.apogee_alt), "max_speed_mps": _r(ev.max_speed),
-                     "max_accel_g": _r(ev.max_accel / 9.80665), "max_mach": _r(ev.max_mach, 3),
-                     "rail_exit_mps": _r(ev.rail_exit_speed)}
-            meta = {"rocket": self.cfg.rocket.name, "motor": self.cfg.motor.preset,
-                    "config": self.cfg.model_dump(), "source": "simulator"}
-            doc = self.recorder.finish(meta, self.link_stats(), truth)
+            doc = self._save_flight()
             if doc:
-                self.last_flight = doc
-                self.broadcast({"type": "flight_complete", "flight": doc})
                 self.event(f"Flight saved: apogee {doc['summary'].get('apogee_m')} m", "success")
+
+    def _save_flight(self, end: dict[str, Any] | None = None) -> dict[str, Any] | None:
+        ev = self.sim.events
+        truth = {"apogee_m": _r(ev.apogee_alt), "max_speed_mps": _r(ev.max_speed),
+                 "max_accel_g": _r(ev.max_accel / 9.80665), "max_mach": _r(ev.max_mach, 3),
+                 "rail_exit_mps": _r(ev.rail_exit_speed)}
+        meta = {"rocket": self.cfg.rocket.name, "motor": self.cfg.motor.preset,
+                "config": self.cfg.model_dump(), "source": "simulator"}
+        doc = self.recorder.finish(meta, self.link_stats(), truth, end)
+        if doc:
+            self.last_flight = doc
+            self.broadcast({"type": "flight_complete", "flight": doc})
+        return doc
 
     def _emit_sim_log(self) -> None:
         log = self.sim.events.log

@@ -39,10 +39,13 @@ class FlightRecorder:
             self.rows.append(row)
 
     def finish(self, meta: dict[str, Any], link: dict[str, Any],
-               truth: dict[str, Any] | None) -> dict[str, Any] | None:
+               truth: dict[str, Any] | None,
+               end: dict[str, Any] | None = None) -> dict[str, Any] | None:
         if not self.active:
             return None
         summary = summarise(self.rows, link, truth)
+        if end:
+            summary.update(end)
         doc = {"id": self.flight_id, "started_at": self.started_at, "meta": meta,
                "summary": summary, "series": downsample(self.rows)}
         with open(self.dir / f"{self.flight_id}.csv", "w", newline="") as fh:

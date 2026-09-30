@@ -121,7 +121,7 @@ def reset_config() -> dict[str, Any]:
 @app.post("/api/command/{action}")
 def command(action: str, request: Request) -> dict[str, Any]:
     log.info("%s: command %s", request.state.user, action)
-    result = station.command(action)
+    result = station.command(action, user=request.state.user)
     if not result["ok"]:
         raise HTTPException(409, detail=result["error"])
     return result
