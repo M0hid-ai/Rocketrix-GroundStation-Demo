@@ -70,7 +70,7 @@ Keep it to one replica, because the simulation lives in the server's memory.
 |---|---|
 | Live dashboard | Altitude (Kalman vs raw baro vs GPS vs sim truth), vertical velocity, acceleration, pressure, temperature, signal strength; 30 s / 1 min / 3 min / whole-flight windows |
 | Flight phases | PAD → BOOST → COAST → APOGEE → DROGUE → MAIN → LANDED pipeline with timestamps, marked on every chart |
-| Mission control | ARM / LAUNCH (with countdown) / ABORT / RESET, 1× 2× 5× simulation speed, mission clock |
+| Mission control | ARM / LAUNCH (with countdown) / ABORT / END FLIGHT (stop mid-flight and save the report so far) / RESET, 1× 2× 5× simulation speed, mission clock |
 | Link health | End-to-end latency split into radio and ground → screen, packet rate, loss, CRC errors, RSSI/SNR, LoRa radio duty |
 | Alerts | Telemetry lost, GPS no fix, low battery, radio overloaded, heavy packet loss |
 | Post-flight report | Apogee, max velocity/acceleration, burn time, time to apogee, drogue/main descent rates, landing speed, drift, timeline, charts, CSV export, print to PDF |
@@ -144,7 +144,7 @@ cd backend && python3 -m venv .venv && .venv/bin/pip install -r requirements-dev
 cd ../frontend && npm install && npm run typecheck
 ```
 
-API (session cookie required): `POST /api/auth/login`, `POST /api/auth/logout`, `GET /api/auth/me`, `GET /api/config`, `PATCH /api/config` (partial JSON, validated), `POST /api/command/{arm|disarm|launch|abort|reset}`,
+API (session cookie required): `POST /api/auth/login`, `POST /api/auth/logout`, `GET /api/auth/me`, `GET /api/config`, `PATCH /api/config` (partial JSON, validated), `POST /api/command/{arm|disarm|launch|abort|end|reset}`,
 `GET /api/flights`, `GET /api/flights/{id}`, `GET /api/flights/{id}/csv`, WebSocket `/ws`. Interactive docs are at `/docs` once signed in. `GET /api/health` is public.
 
 ## Moving to real hardware

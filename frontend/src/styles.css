@@ -1122,3 +1122,17 @@ a.btn {
     outline: 2px solid var(--critical);
   }
 }
+
+.ended-banner {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  font-size: 13px;
+  color: var(--text-2);
+  border-color: rgba(208, 59, 59, 0.45);
+}
+
+.ended-tag {
+  color: #ffb4b4;
+}

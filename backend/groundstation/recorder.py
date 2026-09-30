@@ -72,7 +72,8 @@ class FlightRecorder:
             out.append({"id": doc["id"], "started_at": doc.get("started_at"),
                         "name": doc.get("meta", {}).get("rocket"),
                         "motor": doc.get("meta", {}).get("motor"),
-                        "apogee_m": s.get("apogee_m"), "flight_time_s": s.get("flight_time_s")})
+                        "apogee_m": s.get("apogee_m"), "flight_time_s": s.get("flight_time_s"),
+                        "ended_early": s.get("ended_early", False)})
         return out
 
     def load(self, flight_id: str) -> dict[str, Any] | None:

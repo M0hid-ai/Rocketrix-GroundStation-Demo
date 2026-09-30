@@ -151,13 +151,13 @@ export default function App() {
 function Dashboard({ user, onLogout }: { user: string; onLogout: () => void }) {
   const [tab, setTab] = useState<"live" | "flights">("live");
   const [settings, setSettings] = useState(false);
-  const [toast, setToast] = useState<{ id: string; apogee?: number } | null>(null);
+  const [toast, setToast] = useState<{ id: string; apogee?: number; ended?: boolean } | null>(null);
   const [focus, setFocus] = useState<string | null>(null);
 
   useEffect(() => {
     store.connect();
     return store.onFlightComplete((f) => {
-      setToast({ id: f.id, apogee: f.summary.apogee_m });
+      setToast({ id: f.id, apogee: f.summary.apogee_m, ended: f.summary.ended_early });
       setTimeout(() => setToast(null), 10000);
     });
   }, []);
@@ -197,7 +197,8 @@ function Dashboard({ user, onLogout }: { user: string; onLogout: () => void }) {
       {settings && <SettingsDrawer onClose={() => setSettings(false)} />}
       {toast && (
         <div className="toast">
-          Flight complete - apogee <b className="mono">{toast.apogee} m</b>{" "}
+          {toast.ended ? "Flight ended early - max altitude" : "Flight complete - apogee"}{" "}
+          <b className="mono">{toast.apogee} m</b>{" "}
           <button
             className="btn sm primary"
             style={{ marginLeft: 10 }}

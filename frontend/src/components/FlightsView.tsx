@@ -126,6 +126,8 @@ function Report({ doc, onDelete }: { doc: FlightDoc; onDelete: () => void }) {
   const total = s.flight_time_s ?? 1;
   const [series] = useState(() => ({ alt: cssVars(ALT), vel: cssVars(VEL), acc: cssVars(ACC), temp: cssVars(TEMP) }));
   const truth = s.truth ?? {};
+  // Ended before apogee: the highest point is just where it was when the flight was stopped.
+  const noApogee = !!s.ended_early && !phases.some((p) => ["DROGUE", "MAIN", "LANDED"].includes(p.state));
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
       <div className="panel report-head">
@@ -148,11 +150,27 @@ function Report({ doc, onDelete }: { doc: FlightDoc; onDelete: () => void }) {
         </div>
       </div>
 
+      {s.ended_early && (
+        <div className="panel ended-banner">
+          <span className="chip critical">ENDED EARLY</span>
+          <span>
+            Stopped during <b>{s.ended_in}</b> at <b className="mono">T+{s.flight_time_s} s</b>
+            {s.ended_by ? (
+              <>
+                {" "}
+                by <b>{s.ended_by}</b>
+              </>
+            ) : null}
+            . Figures cover only the data received up to that point.
+          </span>
+        </div>
+      )}
+
       <div className="tiles">
-        <Stat label="Apogee" value={s.apogee_m} unit="m" />
+        <Stat label={noApogee ? "Max altitude reached" : "Apogee"} value={s.apogee_m} unit="m" />
         <Stat label="Max velocity" value={s.max_velocity_mps} unit="m/s" />
         <Stat label="Max acceleration" value={s.max_accel_g} unit="g" />
-        <Stat label="Time to apogee" value={s.time_to_apogee_s} unit="s" />
+        <Stat label={noApogee ? "Time to max altitude" : "Time to apogee"} value={s.time_to_apogee_s} unit="s" />
         <Stat label="Flight time" value={s.flight_time_s} unit="s" />
         <Stat label="Drogue descent" value={s.drogue_descent_mps} unit="m/s" />
         <Stat label="Main descent" value={s.main_descent_mps} unit="m/s" />
@@ -219,12 +237,12 @@ function Report({ doc, onDelete }: { doc: FlightDoc; onDelete: () => void }) {
           <table className="table">
             <tbody>
               <tr>
-                <td>Apogee · Kalman / baro / GPS</td>
+                <td>{noApogee ? "Max altitude" : "Apogee"} · Kalman / baro / GPS</td>
                 <td className="num">
                   {s.apogee_m} / {s.apogee_baro_m} / {s.apogee_gps_m} m
                 </td>
               </tr>
-              {truth.apogee_m !== undefined && (
+              {truth.apogee_m != null && s.apogee_error_m !== undefined && (
                 <tr>
                   <td>Simulator true apogee (estimator error)</td>
                   <td className="num">
@@ -317,6 +335,7 @@ export default function FlightsView({ focusId }: { focusId: string | null }) {
               </div>
               <div className="fi-sub">
                 {dateTime(f.started_at)} · {f.flight_time_s ?? "—"} s
+                {f.ended_early && <span className="ended-tag"> · ended early</span>}
               </div>
             </button>
           ))}

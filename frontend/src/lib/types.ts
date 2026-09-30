@@ -123,6 +123,10 @@ export interface FlightSummary {
   max_temp_c?: number | null;
   min_battery_v?: number | null;
   apogee_error_m?: number;
+  /** set when an operator pressed END FLIGHT instead of waiting for landing */
+  ended_early?: boolean;
+  ended_in?: Phase;
+  ended_by?: string | null;
   phases?: { state: Phase; tp: number | null; alt: number }[];
   link?: Partial<LinkStatus> & { attempted?: number };
   truth?: Record<string, number | null>;
@@ -143,4 +147,5 @@ export interface FlightListItem {
   motor: string;
   apogee_m: number | null;
   flight_time_s: number | null;
+  ended_early?: boolean;
 }

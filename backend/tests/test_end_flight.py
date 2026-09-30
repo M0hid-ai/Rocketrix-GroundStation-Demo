@@ -48,6 +48,7 @@ def test_end_during_coast_saves_report_and_resets():
     assert "apogee_error_m" not in s  # no real apogee yet, so no error to report
     assert station.recorder.load(doc["id"]) is not None
     assert station.recorder.csv_path(doc["id"]) is not None
+    assert station.recorder.list()[0]["ended_early"] is True
     # everyone gets the report, then a fresh pad
     types = [m.get("type") for m in sent]
     assert types.index("flight_complete") < types.index("reset")
